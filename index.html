@@ -1,1 +1,105 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Guitar Tuner</title></head><body><h1>Tuner</h1><script type="module" src="/src/main.ts"></script></body></html>
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A private, on-device six-string guitar tuner with alternate tunings and relative reference calibration.">
+<title>Tuner — Guitar tuning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Russo+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/styles/app.css">
+</head>
+<body>
+<main class="page">
+  <header class="top" data-od-id="site-header">
+    <div>
+      <h1 class="mark" data-od-id="wordmark">Tuner</h1>
+      <span class="rule" aria-hidden="true"></span>
+    </div>
+    <p class="meta">Guitar · six strings · A4 = 440 Hz</p>
+  </header>
+
+  <div class="layout">
+    <div class="tuning-bar" data-od-id="current-tuning">
+      <span class="lbl" id="lbl-tuning">Current tuning</span>
+      <button class="selector" id="tuning-toggle" type="button" aria-controls="tuning-panel" aria-expanded="false" aria-labelledby="lbl-tuning tuning-name tuning-notes">
+        <span class="sel-text"><span class="sel-name js-name" id="tuning-name">Standard</span><span class="sel-notes js-notes" id="tuning-notes">E2 A2 D3 G3 B3 E4</span></span>
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+      <div class="selector readout" role="group" aria-labelledby="lbl-tuning" data-od-id="tuning-readout">
+        <span class="sel-text"><span class="sel-name js-name">Standard</span><span class="sel-notes js-notes">E2 A2 D3 G3 B3 E4</span></span>
+      </div>
+    </div>
+
+    <aside class="tuning-panel closed" id="tuning-panel" data-od-id="tuning-panel" aria-label="Tuning">
+      <div class="sec-head" style="margin-bottom:0"><span class="idx">03</span><h2>Tuning</h2></div>
+      <div class="seg" role="radiogroup" aria-label="Tuning mode" data-od-id="mode-switch">
+        <label><input type="radio" name="mode" value="preset" checked><span>Preset</span></label>
+        <label><input type="radio" name="mode" value="custom"><span>Custom</span></label>
+      </div>
+      <div id="panel-preset" data-od-id="preset-list"></div>
+      <div id="panel-custom" hidden data-od-id="custom-panel" style="display:grid;gap:16px">
+        <div class="field">
+          <label for="base">Base tuning — sets the intervals between strings</label>
+          <select id="base"></select>
+        </div>
+        <ol class="stages" id="stages" aria-live="off"></ol>
+      </div>
+    </aside>
+
+    <section class="meter" data-od-id="meter-section" aria-label="Live meter">
+      <div class="plate-bar"><span class="idx">01 / Live meter</span><span class="prov" id="prov">Idle</span></div>
+      <div class="reading">
+        <div class="note" id="note" data-od-id="target-note">E2</div>
+        <div class="cents dim" id="cents" data-od-id="cents-readout">—</div>
+      </div>
+      <p class="verdict"><span class="chip" id="state" data-s="off">Microphone off</span><span id="hint">Start the microphone, then pluck a string.</span></p>
+      <div>
+        <div class="gauge idle" id="gauge" role="meter" aria-label="Pitch offset in cents" aria-valuemin="-50" aria-valuemax="50" aria-valuenow="0" aria-valuetext="No reading">
+          <div class="band"></div>
+          <div class="dev" id="dev"></div>
+          <span class="beyond lo" id="bylo" hidden>‹ Beyond scale</span>
+          <span class="beyond hi" id="byhi" hidden>Beyond scale ›</span>
+          <div class="needle" id="needle"></div>
+        </div>
+        <div class="scale" aria-hidden="true"><span>−50¢</span><span>0</span><span>+50¢</span></div>
+      </div>
+      <p class="secondary"><span>Target · <b id="target">—</b></span><span>Heard · <b id="heard">—</b></span></p>
+      <div class="actions">
+        <button class="btn primary" id="mic" type="button" data-od-id="mic-button">Start microphone</button>
+        <button class="btn" id="tonebtn" type="button" data-od-id="tone-button">Play E2 tone</button>
+      </div>
+      <div class="custom-strip" id="custom-strip" hidden data-od-id="custom-strip">
+        <p class="step" id="step-now" aria-live="polite"></p>
+        <div class="actions">
+          <button class="btn" id="rec" type="button">Record reference</button>
+          <button class="btn ghost" id="clr" type="button">Clear reference</button>
+        </div>
+        <p class="why" id="rec-why" aria-live="polite"></p>
+      </div>
+      <p class="err" id="err" role="alert" hidden></p>
+    </section>
+
+    <section data-od-id="strings-section" aria-labelledby="h-strings">
+      <div class="sec-head"><span class="idx">02</span><h2 id="h-strings">Strings</h2>
+        <label class="check right"><input type="checkbox" id="auto" checked><span class="box"></span><span id="auto-label">Automatic detection: on</span></label>
+      </div>
+      <div class="strings" id="strings" role="group" aria-label="Strings, low to high"></div>
+    </section>
+
+    <details data-od-id="method">
+      <summary>Method</summary>
+      <p>Pitch is found with YIN difference analysis on a 50 ms interval and shown in cents from the target string. In tune means within 5 cents and steady. Once a string reads in tune, it stays in tune until it drifts past 8 cents, so a small wobble does not make the label flicker. Custom mode keeps the equal-tempered intervals of the base tuning and moves them to the string you record.</p>
+    </details>
+  </div>
+
+  <footer data-od-id="site-footer">
+    <p>Pitch is detected on this device from the microphone. No audio is stored or sent. Concert pitch is A4 = 440 Hz. Detection accuracy has not been checked against a calibrated reference tuner.</p>
+  </footer>
+</main>
+<div class="vh" id="announce" role="status" aria-live="polite"></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
