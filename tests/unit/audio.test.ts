@@ -43,13 +43,34 @@ describe("YIN synthetic accuracy", () => {
         Math.abs(centsBetween(d.detect(signal(d, 82.407, a, n, h))!, 82.407)),
       ).toBeLessThan(3);
   });
-  it("rejects silence, DC, noise, sub-threshold and malformed signals", () => {
+  it.each([82.407, 110, 146.832, 196, 246.942, 329.628])(
+    "detects %f Hz at 48 kHz near -42 dBFS RMS",
+    (f) => {
+      const d = new YinDetector(48000),
+        result = d.detect(signal(d, f, 0.0113));
+      expect(result).not.toBeNull();
+      expect(Math.abs(centsBetween(result!, f))).toBeLessThan(3);
+    },
+  );
+  it("detects 329.628 Hz at 44.1 kHz near -42 dBFS RMS", () => {
+    const d = new YinDetector(44100),
+      result = d.detect(signal(d, 329.628, 0.0113));
+    expect(result).not.toBeNull();
+    expect(Math.abs(centsBetween(result!, 329.628))).toBeLessThan(3);
+  });
+  it("detects 80 Hz at 0.001 amplitude above the silence floor", () => {
+    const d = new YinDetector(48000),
+      result = d.detect(signal(d, 80, 0.001));
+    expect(result).not.toBeNull();
+    expect(Math.abs(centsBetween(result!, 80))).toBeLessThan(3);
+  });
+  it("rejects silence, DC, noise, below-silence-floor and malformed signals", () => {
     const d = new YinDetector(48000);
     for (const b of [
       new Float32Array(d.bufferSize),
       new Float32Array(d.bufferSize).fill(0.1),
       signal(d, 80, 0, 0.3),
-      signal(d, 80, 0.001),
+      signal(d, 80, 1e-4),
       new Float32Array(10),
       new Float32Array(d.bufferSize).fill(NaN),
     ])

@@ -46,8 +46,11 @@ are retained. The integration window scales from 2048 samples at 48 kHz (~42.7 m
 Maximum lag is `ceil(sampleRate / 55) + 1`; analysis input is the next power of two
 covering window + max lag + one interpolation sample. At 48 kHz that is 4096 samples;
 at 96 kHz 8192; at 192 kHz 16384. Accepted frequency range is 55–1000 Hz; all current
-preset targets (C2 through E4) lie inside it. Invalid/non-finite, too short, DC,
-silent and RMS-below-0.008 input is rejected. RMS uses mean-removed variance.
+preset targets (C2 through E4) lie inside it. Detection is decided by the normalized
+difference falling below 0.12, independent of input level. Only a numeric silence
+floor on the mean-removed variance (1e-8, RMS about 1e-4, roughly -80 dBFS) rejects
+silence, DC and denormals; quiet strings are accepted. Invalid/non-finite and
+too-short input is also rejected.
 
 The first threshold basin is searched for its lowest normalized difference within
 25% of the threshold lag. This corrects a noisy-signal early-local-minimum bias found

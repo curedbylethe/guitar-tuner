@@ -1,7 +1,10 @@
-/** YIN's cumulative mean normalized difference, preserving the reference's 0.12 threshold.
+/** YIN's cumulative mean normalized difference. Detection is decided by the
+ * normalized difference falling below 0.12, not by input level; a numeric
+ * variance floor rejects only silence, DC and denormals.
  * Lag bounds scale with sample rate; a 1024-lag cap cannot see C2 at 96 kHz.
  * Work buffers are reused. The analysis window is ~43 ms plus one maximum period.
  */
+const MIN_VARIANCE = 1e-8;
 export class YinDetector {
   readonly minFrequency = 55;
   readonly maxFrequency = 1000;
@@ -34,11 +37,9 @@ export class YinDetector {
       }
     }
     // DC offsets are not a signal; use variance rather than raw RMS.
-    if (
-      Math.sqrt(Math.max(0, energy / this.window - (mean / this.window) ** 2)) <
-      0.008
-    )
-      return null;
+    // Numeric silence floor only: rejects zero, DC and denormals, not quiet strings.
+    const variance = Math.max(0, energy / this.window - (mean / this.window) ** 2);
+    if (variance < MIN_VARIANCE) return null;
     const d = this.difference;
     let running = 0;
     d[0] = 1;
