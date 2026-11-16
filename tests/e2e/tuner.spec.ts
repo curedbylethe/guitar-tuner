@@ -103,6 +103,11 @@ test("suppresses an octave-ambiguous reading without changing selection", async 
     page.getByRole("meter", { name: "Pitch offset in cents" }),
   ).toHaveAttribute("aria-valuetext", "No reading");
   await expect(page.locator("#heard")).toHaveText("—");
+  await openTuning(page);
+  await page.getByText("Custom", { exact: true }).click();
+  await page.waitForTimeout(700);
+  await expect(page.locator("#rec")).toBeDisabled();
+  await expect(page.locator("#step-now")).not.toContainText("164.81");
 });
 test("records a custom reference at the meter and invalidates it on base changes", async ({
   page,

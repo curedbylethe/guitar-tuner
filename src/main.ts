@@ -125,10 +125,11 @@ function frame(now: number): void {
     ? centsBetween(pitch.frequency, targets()[state.sel]!)
     : 0;
   const ambiguous = !!pitch && octaveAmbiguous(cents);
+  const usable = ambiguous ? null : pitch;
   const status = feedback(
     live,
     tone.active,
-    pitch && !ambiguous ? cents : null,
+    usable ? cents : null,
     !!pitch?.stable,
     latched,
   );
@@ -138,11 +139,11 @@ function frame(now: number): void {
     else if (status === "flat" || status === "sharp") tuned.delete(state.sel);
   }
   renderConfiguration(state, tuning(), targets(), tuned);
-  renderCustom(state, tuning(), pitch, live, tone.active, simulated);
+  renderCustom(state, tuning(), usable, live, tone.active, simulated);
   meter.render(
     status,
     tuning().notes[state.sel]!,
-    pitch && !ambiguous ? pitch.frequency : null,
+    usable?.frequency ?? null,
     cents,
     tone.active
       ? "Reference tone"
