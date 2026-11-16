@@ -1,0 +1,33 @@
+name: Validate
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run verify
+      - name: Keep browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
