@@ -7,5 +7,5 @@
     "verbatimModuleSyntax": true, "isolatedModules": true, "skipLibCheck": true,
     "types": ["vite/client"], "noEmit": true
   },
-  "include": ["src", "tests/unit"]
+  "include": ["src", "tests"]
 }

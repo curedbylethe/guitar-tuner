@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Responsive tuner verification</title><style>body{margin:20px;font:16px system-ui}button{padding:12px;margin:0 8px 12px 0}iframe{display:block;border:1px solid;min-height:1800px}#result{font-weight:bold}</style></head><body>
+<h1>Responsive verification</h1><p>Real application in a constrained viewport. No microphone is requested.</p>
+<button data-width="320">320 px</button><button data-width="360">360 px</button><button data-width="768">768 px</button><button data-width="1280">1280 px</button><p id="result" role="status">Loading</p>
+<iframe id="app" title="Guitar tuner viewport" src="../../index.html" width="360" height="1800"></iframe>
+<script type="module">
+const frame=document.querySelector('#app');
+function verify(){const doc=frame.contentDocument, width=frame.contentWindow.innerWidth;
+const strings=[...doc.querySelectorAll('.str')]; if(strings.length!==6){document.querySelector('#result').textContent='Waiting for application';return;}
+const first=strings[0].getBoundingClientRect(),fourth=strings[3].getBoundingClientRect();
+const fits=doc.documentElement.scrollWidth<=width,grid=width<640?fourth.y>first.y:fourth.y===first.y;
+document.querySelector('#result').textContent=`${fits&&grid?'PASS':'FAIL'} · ${width}px · document ${doc.documentElement.scrollWidth}px · ${grid?'correct':'incorrect'} string grid`;
+}
+frame.onload=()=>setTimeout(verify,200);
+for(const button of document.querySelectorAll('button')) button.onclick=()=>{frame.width=button.dataset.width;setTimeout(verify,200);};
+</script></body></html>
