@@ -10,6 +10,7 @@ export function signal(
   amplitude = 0.3,
   noise = 0,
   harmonic = 0,
+  partial = 2,
 ): Float32Array {
   let seed = 123;
   return Float32Array.from({ length: detector.bufferSize }, (_, i) => {
@@ -17,7 +18,7 @@ export function signal(
     const phase = (2 * Math.PI * f * i) / detector.sampleRate;
     return (
       amplitude * Math.sin(phase) +
-      harmonic * Math.sin(2 * phase) +
+      harmonic * Math.sin(partial * phase) +
       noise * (seed / 2 ** 32 - 0.5)
     );
   });
@@ -82,6 +83,20 @@ describe("YIN synthetic accuracy", () => {
     expect(result).not.toBeNull();
     expect(Math.abs(centsBetween(result!, reported))).toBeLessThan(3);
   });
+  it.each([44100, 48000, 96000, 192000])(
+    "resolves a fundamental 10 dB and 6 dB below its third harmonic at %i Hz",
+    (sr) => {
+      const d = new YinDetector(sr);
+      for (const f of [
+        65.406, 73.416, 82.407, 110, 146.832, 196, 246.942, 329.628,
+      ])
+        for (const a of [0.316, 0.5]) {
+          const result = d.detect(signal(d, f, a, 0, 1, 3));
+          expect(result).not.toBeNull();
+          expect(Math.abs(centsBetween(result!, f))).toBeLessThan(3);
+        }
+    },
+  );
   it.each([82.407, 110, 146.832, 196, 246.942, 329.628])(
     "detects %f Hz at 48 kHz near -42 dBFS RMS",
     (f) => {
