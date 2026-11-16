@@ -17,6 +17,7 @@ export function buildConfiguration(): void {
   element('#stages').innerHTML = ['Select a string','Wait for a stable reading','Record the reference','Tune the rest'].map((title,i)=>`<li data-st="todo"><span class="k">0${i+1}</span><span class="t">${title}</span><span class="w"></span><span class="s"></span></li>`).join('');
 }
 export function buildStrings(tuning: Tuning, targets: readonly number[]): void {
+  element('#custom-string').innerHTML = tuning.notes.map((note,i)=>`<option value="${i}">String ${6-i} · ${note}</option>`).join('');
   element('#strings').innerHTML = tuning.notes.map((note,i)=>`<button type="button" class="str" data-i="${i}"><span class="r1"><span class="n">${6-i}</span><span class="tag"></span></span><span class="note">${note}</span><span class="r3"><span>${targets[i]!.toFixed(1)} Hz</span><span class="done" aria-hidden="true"></span></span></button>`).join('');
 }
 export function renderConfiguration(state: Settings, tuning: Tuning, targets: readonly number[], tuned: ReadonlySet<number>): void {
@@ -33,6 +34,7 @@ export function renderConfiguration(state: Settings, tuning: Tuning, targets: re
   element<HTMLButtonElement>('#clr').disabled = !state.ref;
   text('note',tuning.notes[state.sel]!); text('target',targets[state.sel]!.toFixed(2)+' Hz');
   text('rec',`Record string ${6-state.sel} as reference`);
+  element<HTMLSelectElement>('#custom-string').value = String(state.sel);
   document.querySelectorAll('.js-name').forEach(node=>node.textContent=tuning.name);
   document.querySelectorAll('.js-notes').forEach(node=>node.textContent=tuning.notes.join(' ').replace(/\d/g,'')+(state.mode==='custom' ? state.ref ? ' · relative':' · custom':''));
   element('#strings').querySelectorAll<HTMLButtonElement>('.str').forEach((button,i)=>{

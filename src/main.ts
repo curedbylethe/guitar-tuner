@@ -64,6 +64,9 @@ element('#strings').addEventListener('click',event=>{
   const button=(event.target as Element).closest<HTMLButtonElement>('.str'); if(!button) return;
   state.sel=Number(button.dataset.i);state.auto=false;reset();tone.stop();save();
 });
+element<HTMLSelectElement>('#custom-string').addEventListener('change',event=>{
+  state.sel=Number((event.target as HTMLSelectElement).value);state.auto=false;reset();tone.stop();save();
+});
 element<HTMLInputElement>('#auto').addEventListener('change',event=>{state.auto=(event.target as HTMLInputElement).checked;selector.reset();save();});
 document.querySelectorAll<HTMLInputElement>('input[name=mode]').forEach(input=>input.addEventListener('change',()=>{
   state.mode=input.value==='custom'?'custom':'preset';refresh();closePanel();
