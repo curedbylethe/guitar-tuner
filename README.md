@@ -7,6 +7,10 @@ Vite and native Web Audio; zero production npm dependencies.
 
 ![The tuner in its real browser preview](docs/screenshots/tuner-desktop.jpg)
 
+> [!Vibe Coded]
+>
+> This project was completely vibe-coded by OpenAI's Codex for personal use.
+
 ## Run locally
 
 Use Node.js 26.13.1 LTS (`nvm use`); supported Node 24.22.1+ also works.
