@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 export default defineConfig({
-  base: '/guitar-tuner/',
-  test: { include: ['tests/unit/**/*.test.ts'], environment: 'node' },
+  base: "/guitar-tuner/",
+  test: { include: ["tests/unit/**/*.test.ts"], environment: "node" },
 });
