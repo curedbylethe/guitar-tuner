@@ -44,6 +44,45 @@ describe("YIN synthetic accuracy", () => {
       ).toBeLessThan(3);
   });
   it.each([82.407, 110, 146.832, 196, 246.942, 329.628])(
+    "resolves an attenuated fundamental against its second harmonic at %f Hz",
+    (f) => {
+      const d = new YinDetector(48000);
+      for (const [a, h] of [
+        [0.05, 0.5],
+        [0.05, 1.0],
+        [0.012, 0.12],
+      ]) {
+        const result = d.detect(signal(d, f, a, 0, h));
+        expect(result).not.toBeNull();
+        expect(Math.abs(centsBetween(result!, f))).toBeLessThan(3);
+      }
+    },
+  );
+  it("inverts both issue reproductions with a dominant second harmonic", () => {
+    const d = new YinDetector(48000);
+    for (const f of [82.407, 110]) {
+      const result = d.detect(signal(d, f, 0.05, 0, 1));
+      expect(result).not.toBeNull();
+      expect(Math.abs(centsBetween(result!, f))).toBeLessThan(3);
+    }
+    const noisy = d.detect(signal(d, 82.407, 0.05, 0.002, 1));
+    expect(noisy).not.toBeNull();
+    expect(Math.abs(centsBetween(noisy!, 82.407))).toBeLessThan(3);
+  });
+  it.each([
+    [82.407, 164.81],
+    [329.628, 659.255],
+    [987.767, 1975.5],
+  ])("does not halve a pure second harmonic at %f Hz", (f, expected) => {
+    const d = new YinDetector(48000),
+      result = d.detect(signal(d, f, 0, 0, 0.3));
+    // 1975.5 Hz is above the ceiling; the detector keeps its pre-existing
+    // subharmonic reading at 987.767 Hz rather than returning null.
+    const reported = expected > d.maxFrequency ? f : expected;
+    expect(result).not.toBeNull();
+    expect(Math.abs(centsBetween(result!, reported))).toBeLessThan(3);
+  });
+  it.each([82.407, 110, 146.832, 196, 246.942, 329.628])(
     "detects %f Hz at 48 kHz near -42 dBFS RMS",
     (f) => {
       const d = new YinDetector(48000),

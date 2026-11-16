@@ -54,11 +54,21 @@ too-short input is also rejected.
 
 The first threshold basin is searched for its lowest normalized difference within
 25% of the threshold lag. This corrects a noisy-signal early-local-minimum bias found
-by a deterministic regression test. Three-point parabolic interpolation refines its
-lag. Runtime is O(window × maximum lag); buffers are reused, with no per-lag arrays.
-The upper supported sample rate is 192 kHz. Main-thread analysis may be expensive on
-older mobile devices at high sample rates; profiling is needed before introducing a
-worker or AudioWorklet. This is a monophonic detector, not chord recognition.
+by a deterministic regression test. An extension step then doubles the basin lag while
+the doubled position fits clearly better: it scans ±8 % around that centre, breaks when
+the raw normalized difference at the current lag is below `RESIDUAL` (0.002), and
+accepts a candidate only when it improves that value by at least `MARGIN` (0.001).
+Doubling is iterated; lags at the ceiling skip it. The comparison uses `nd`, the raw
+squared difference divided by `2 × window × variance`, not the cumulative-mean
+difference used for the threshold. `nd` has no cumulative-mean lag trend, so it is
+comparable across lags. Extension also stops above three quarters of the maximum
+frequency, where doubling would leave the guitar band and create a spurious low
+subharmonic. Three-point parabolic interpolation refines the chosen lag. Runtime is
+O(window × maximum lag); two per-lag work buffers (`difference` and `raw`) are reused,
+but no ephemeral array is allocated per lag. The upper supported sample rate is
+192 kHz. Main-thread analysis may be expensive on older mobile devices at high sample
+rates; profiling is needed before introducing a worker or AudioWorklet. This is a
+monophonic detector, not chord recognition.
 
 History keeps eight samples; presentation uses the median of five. Stability needs
 six observations with <10-cent spread. A >70-cent jump or >200 ms gap resets history;
@@ -66,8 +76,10 @@ a reading expires after 200 ms without a usable signal. Every unstable reading s
 Settling, including readings far from the target. In tune enters within 5 cents and
 stays until 8 cents, while still requiring stability. Automatic selection requires
 three fresh stable detections with a >20-cent advantage over the current string.
-The closest fundamental cannot resolve all octave/harmonic ambiguities, especially
-when the played string is far from the intended tuning. Choose the string manually.
+The extension resolves a fundamental that sits 20–26 dB below a dominant second
+harmonic (all six open strings, with and without noise). It does not resolve a
+dominant third or higher harmonic, or a fundamental about 30 dB down; those readings
+can still be reported an octave high. Select the string manually in that case.
 
 ## Custom calibration and persistence
 
