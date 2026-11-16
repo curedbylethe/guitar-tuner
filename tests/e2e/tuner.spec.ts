@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { mockAudio, openTuning } from './audio-fixture';
-test.beforeEach(async({page})=>{await mockAudio(page);await page.goto('./');});
+test.beforeEach(async({page})=>{
+  await page.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\//,route=>route.abort());
+  await mockAudio(page);await page.goto('./');
+});
 test('starts idle with accessible meter and all strings',async({page})=>{
   await expect(page.locator('#state')).toHaveText('Microphone off');
   await expect(page.getByRole('meter',{name:'Pitch offset in cents'})).toHaveAttribute('aria-valuetext','No reading');
