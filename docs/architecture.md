@@ -78,10 +78,12 @@ stays until 8 cents, while still requiring stability. Automatic selection requir
 three fresh stable detections with a >20-cent advantage over the current string.
 An offset within 50 cents of a single octave either way (±1200 cents) is unusable:
 no verdict, no heard frequency, no automatic-selection move and no reference
-recording. Two strings an exact octave apart (E2/E4, D2/D3, open G/B) must be
-chosen manually. The extension resolves a fundamental that sits 20–26 dB below a
-dominant second harmonic (all six open strings, with and without noise). It does not
-resolve a dominant third or higher harmonic, or a fundamental about 30 dB down; those
+recording. Some presets put two strings an exact octave apart (D2/D3 in Drop D,
+E2/E3 in Open E, C2/C3 in Open C); such a string must be chosen manually, while
+standard tuning has no octave pair. The extension resolves a fundamental that sits
+20–26 dB below a dominant second harmonic (all six open strings, with and without
+noise). It does not resolve a dominant third or higher harmonic, or a fundamental
+about 30 dB down; those
 readings can still be reported an octave high when the guard does not catch them.
 
 ## Custom calibration and persistence
