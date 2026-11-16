@@ -4,6 +4,7 @@ import {
   median,
   midiToFrequency,
   noteToMidi,
+  octaveAmbiguous,
 } from "../../src/tuning/notes";
 import {
   frequencies,
@@ -32,6 +33,14 @@ describe("tuning domain", () => {
     expect(centsBetween(880, 440)).toBe(1200);
     expect(centsBetween(440 * 2 ** (-5 / 1200), 440)).toBeCloseTo(-5, 8);
   });
+  it.each([1200, -1200, 1180, -1220])(
+    "treats %i cents as octave-ambiguous",
+    (cents) => expect(octaveAmbiguous(cents)).toBe(true),
+  );
+  it.each([0, 700, 1150, 1250, 2400, -2400])(
+    "treats %i cents as unambiguous",
+    (cents) => expect(octaveAmbiguous(cents)).toBe(false),
+  );
   it("keeps six strings ordered low to high in every preset", () => {
     expect(TUNINGS).toHaveLength(11);
     for (const tuning of TUNINGS) {

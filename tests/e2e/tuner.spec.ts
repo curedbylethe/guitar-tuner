@@ -89,6 +89,21 @@ test("automatic selection follows a new stable string", async ({ page }) => {
   await expect(page.locator("#note")).toHaveText("E2");
   await expect(page.locator("#auto")).not.toBeChecked();
 });
+test("suppresses an octave-ambiguous reading without changing selection", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.testAudio.frequency = 164.81;
+  });
+  await page.locator("#mic").click();
+  await page.waitForTimeout(600);
+  await expect(page.locator("#note")).toHaveText("E2");
+  await expect(page.locator("#state")).toHaveText("Listening");
+  await expect(
+    page.getByRole("meter", { name: "Pitch offset in cents" }),
+  ).toHaveAttribute("aria-valuetext", "No reading");
+  await expect(page.locator("#heard")).toHaveText("—");
+});
 test("records a custom reference at the meter and invalidates it on base changes", async ({
   page,
 }) => {

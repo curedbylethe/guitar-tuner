@@ -22,6 +22,12 @@ export function midiToFrequency(midi: number): number {
 export function centsBetween(frequency: number, target: number): number {
   return 1200 * Math.log2(frequency / target);
 }
+/** Covers detector jitter so a reading near an octave is suppressed too. */
+const OCTAVE_MARGIN = 50;
+/** ±1200 cents is either a detector octave error or an octave-related string. */
+export function octaveAmbiguous(cents: number): boolean {
+  return Math.abs(Math.abs(cents) - 1200) < OCTAVE_MARGIN;
+}
 export function median(values: readonly number[]): number {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);

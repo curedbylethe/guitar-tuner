@@ -76,10 +76,13 @@ a reading expires after 200 ms without a usable signal. Every unstable reading s
 Settling, including readings far from the target. In tune enters within 5 cents and
 stays until 8 cents, while still requiring stability. Automatic selection requires
 three fresh stable detections with a >20-cent advantage over the current string.
-The extension resolves a fundamental that sits 20–26 dB below a dominant second
-harmonic (all six open strings, with and without noise). It does not resolve a
-dominant third or higher harmonic, or a fundamental about 30 dB down; those readings
-can still be reported an octave high. Select the string manually in that case.
+An offset within 50 cents of a single octave either way (±1200 cents) is unusable:
+no verdict, no heard frequency, no automatic-selection move and no reference
+recording. Two strings an exact octave apart (E2/E4, D2/D3, open G/B) must be
+chosen manually. The extension resolves a fundamental that sits 20–26 dB below a
+dominant second harmonic (all six open strings, with and without noise). It does not
+resolve a dominant third or higher harmonic, or a fundamental about 30 dB down; those
+readings can still be reported an octave high when the guard does not catch them.
 
 ## Custom calibration and persistence
 
