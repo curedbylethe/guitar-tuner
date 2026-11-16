@@ -1,4 +1,4 @@
-import { GROUPS, TUNINGS, type Tuning } from '../tuning/presets';
+import { GROUPS, TUNINGS, supportedReference, type Tuning } from '../tuning/presets';
 import type { Settings } from '../state/settings';
 import { formatCents, centsBetween, midiToFrequency } from '../tuning/notes';
 import type { PitchReading } from '../audio/stability';
@@ -46,9 +46,10 @@ export function renderConfiguration(state: Settings, tuning: Tuning, targets: re
   });
 }
 export function renderCustom(state: Settings, tuning: Tuning, reading: PitchReading | null, live: boolean, tone: boolean, simulated: boolean): void {
-  const canRecord = !!reading?.stable && !tone && live && !simulated;
+  const supported = !reading || supportedReference(tuning,{i:state.sel,f:reading.frequency});
+  const canRecord = !!reading?.stable && supported && !tone && live && !simulated;
   element<HTMLButtonElement>('#rec').disabled = !canRecord;
-  const reason = simulated ? 'Reference recording is unavailable in simulation.' : !live ? 'Record is off until the microphone is listening.' : tone ? 'Record is off while the reference tone plays.' : !reading ? 'Record is off until a string is heard. Pluck it and let it ring.' : canRecord ? '' : 'Record is off until the reading is stable. Keep the string ringing.';
+  const reason = !supported ? 'This reference would put a string outside the supported 55–1000 Hz range.' : simulated ? 'Reference recording is unavailable in simulation.' : !live ? 'Record is off until the microphone is listening.' : tone ? 'Record is off while the reference tone plays.' : !reading ? 'Record is off until a string is heard. Pluck it and let it ring.' : canRecord ? '' : 'Record is off until the reading is stable. Keep the string ringing.';
   text('rec-why',state.mode==='custom' ? reason:'');
   if (state.mode!=='custom') return;
   const done = [true,!!state.ref || canRecord,!!state.ref,false], current=done.indexOf(false);

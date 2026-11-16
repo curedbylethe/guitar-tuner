@@ -1,4 +1,4 @@
-import { TUNINGS, type Reference } from '../tuning/presets';
+import { TUNINGS, getTuning, supportedReference, type Reference } from '../tuning/presets';
 export interface Settings { mode: 'preset' | 'custom'; preset: string; base: string; ref: Reference | null; sel: number; auto: boolean }
 export interface SettingsStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
 export const STORAGE_KEY = 'aporia-tuner';
@@ -18,6 +18,7 @@ export function readSettings(storage: SettingsStorage): Settings {
       if (typeof ref.i === 'number' && Number.isInteger(ref.i) && ref.i >= 0 && ref.i < 6 && typeof ref.f === 'number' && Number.isFinite(ref.f) && ref.f >= 55 && ref.f <= 1000) state.ref = { i: ref.i, f: ref.f };
     }
   } catch { /* Storage may be disabled or contain an older, malformed record. */ }
+  if (state.ref && !supportedReference(getTuning(state.base),state.ref)) state.ref=null;
   return state;
 }
 export function writeSettings(storage: SettingsStorage, settings: Settings): void {

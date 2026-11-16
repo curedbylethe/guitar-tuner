@@ -25,3 +25,8 @@ export function getTuning(id: string): Tuning { return TUNINGS.find(tuning => tu
 export function frequencies(tuning: Tuning, reference: Reference | null = null): number[] {
   return tuning.midi.map(note => reference ? reference.f * 2 ** ((note - tuning.midi[reference.i]!) / 12) : midiToFrequency(note));
 }
+/** Relative tuning must keep every target inside the detector's supported range. */
+export function supportedReference(tuning: Tuning, reference: Reference): boolean {
+  return Number.isInteger(reference.i) && reference.i >= 0 && reference.i < tuning.notes.length &&
+    Number.isFinite(reference.f) && frequencies(tuning,reference).every(f => f >= 55 && f <= 1000);
+}

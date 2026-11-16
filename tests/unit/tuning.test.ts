@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { centsBetween, median, midiToFrequency, noteToMidi } from '../../src/tuning/notes';
-import { frequencies, getTuning, TUNINGS } from '../../src/tuning/presets';
+import { frequencies, getTuning, TUNINGS, supportedReference } from '../../src/tuning/presets';
 import { defaults, readSettings, writeSettings } from '../../src/state/settings';
 describe('tuning domain', () => {
   it.each([['A4',69],['E2',40],['Eb2',39],['F#3',54],['C-1',0],['C10',132]])('parses %s', (note,midi) => expect(noteToMidi(note)).toBe(midi));
@@ -21,6 +21,11 @@ describe('tuning domain', () => {
     expect(f[1]).toBe(100); expect(centsBetween(f[5]!,f[0]!)).toBeCloseTo(2400,8);
     expect(median([80,81,500,82])).toBe(81.5);
   });
+});
+it('rejects references that move other strings outside the detector range',()=>{
+  expect(supportedReference(getTuning('standard'),{i:0,f:400})).toBe(false);
+  expect(supportedReference(getTuning('standard'),{i:5,f:55})).toBe(false);
+  expect(supportedReference(getTuning('standard'),{i:1,f:110})).toBe(true);
 });
 describe('settings boundary', () => {
   const storage = (text: string) => ({getItem:()=>text,setItem:()=>{}});

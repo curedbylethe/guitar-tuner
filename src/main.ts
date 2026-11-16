@@ -2,7 +2,7 @@ import { Microphone } from './audio/microphone';
 import { ReferenceTone } from './audio/tone';
 import { PitchTracker, type PitchReading } from './audio/stability';
 import { defaults, readSettings, writeSettings, type SettingsStorage } from './state/settings';
-import { frequencies, getTuning } from './tuning/presets';
+import { frequencies, getTuning, supportedReference } from './tuning/presets';
 import { centsBetween } from './tuning/notes';
 import { feedback } from './tuning/feedback';
 import { StringSelector } from './tuning/selection';
@@ -83,7 +83,7 @@ element('#mic').addEventListener('click',()=>{
 element('#tonebtn').addEventListener('click',()=>{showError(''); if(tone.active) tone.stop();else void tone.play(targets()[state.sel]!);});
 element('#rec').addEventListener('click',()=>{
   const pitch=tracker.reading(performance.now());
-  if(!pitch?.stable || tone.active || mic.status!=='listening' || simulated) return;
+  if(!pitch?.stable || tone.active || mic.status!=='listening' || simulated || !supportedReference(tuning(),{i:state.sel,f:pitch.frequency})) return;
   state.ref={i:state.sel,f:pitch.frequency};refresh();
 });
 element('#clr').addEventListener('click',()=>{state.ref=null;refresh();});
