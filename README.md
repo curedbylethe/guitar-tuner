@@ -64,14 +64,17 @@ Optional Google Fonts requests match the reference; local fallback fonts work of
 
 Monophonic, 55–1000 Hz detection. A4=440 Hz for presets; Custom adjusts relative
 pitch. Strong harmonics, chords, noisy rooms and a badly mistuned string can confuse
-automatic selection; select the intended string manually. Older devices at high
-sample rates may need performance work. Physical accuracy is uncalibrated.
+automatic selection; select the intended string manually. A reading within 50 cents
+of one octave from the selected string is ignored: no verdict, no heard frequency and
+no selection or reference change. Strings exactly an octave apart need manual
+selection. Older devices at high sample rates may need performance work. Physical
+accuracy is uncalibrated.
 
-74 unit tests and the production build passed. The live browser passed 11 workflow
-checks plus responsive checks at four widths. The 39-case Playwright suite is
-included but could not start in the implementation sandbox because Chromium's
-required socket was denied. Run it locally or in CI before release. Safari/Firefox
-and real-instrument accuracy are not yet verified. See [Testing](docs/testing.md).
+102 unit tests and the production build passed. The live browser passed 11 workflow
+checks plus responsive checks at four widths. The 42-case Playwright suite passed in
+this workspace; an earlier Chromium socket denial no longer applies, but run it in CI
+before release. Safari/Firefox and real-instrument accuracy are not yet verified.
+See [Testing](docs/testing.md).
 
 ## Documentation
 

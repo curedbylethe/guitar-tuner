@@ -22,9 +22,15 @@ YIN, smoothing, selection and feedback. No instrument or microphone is needed.
 installed Chromium, `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` is an optional override;
 CI uses the version installed by Playwright. Reports and traces are ignored by Git.
 
-## Verified during implementation (2026-11-16)
+## Verified during implementation (2026-11-16, updated 2026-11-17)
 
-- 74 Vitest tests passed; strict typecheck and Pages-subpath production build passed.
+- 102 Vitest tests passed; strict typecheck and Pages-subpath production build passed.
+  Ten `octaveAmbiguous` cases cover 1200, −1200, 1180 and −1220 cents as ambiguous,
+  and 0, 700, 1150, 1250, 2400 and −2400 cents as unambiguous.
+- One Playwright case per viewport feeds 164.81 Hz (one octave above E2) through
+  production YIN. The meter stays on Listening/No reading with no heard frequency and
+  selection stays on E2 instead of moving to D3. Disabling the guard makes that case
+  fail with selection on D3.
 - Synthetic sine cases: 11 frequencies from 55.1 to 987.767 Hz at four sample rates
   (44.1, 48, 96, 192 kHz), each <3 cents error in those exact generated cases.
 - Deterministic weak/noisy and stronger-second-harmonic fixtures pass; silence, DC,
@@ -32,10 +38,10 @@ CI uses the version installed by Playwright. Reports and traces are ignored by G
 - The real preview browser passed 11/11 development-harness workflow checks.
 - Native keyboard radio-arrow mode navigation was also checked in the live browser.
 - Real application constrained-viewport checks passed at 320, 360, 768 and 1280 px.
-- Playwright discovers 39 cases. It could not launch Chromium in the implementation
-  workspace: OS denial of the process-singleton socket (`Operation not permitted`).
-  No Playwright assertion ran there. The full suite must pass on a normal machine
-  or GitHub Actions before calling release verification complete.
+- Playwright discovers 42 cases (14 per viewport across three projects). All 42 passed
+  in this workspace with a locally launched Chromium; none were skipped. An earlier
+  sandbox denial of Chromium's singleton socket (`Operation not permitted`) no longer
+  applies here, but release verification still needs a CI run.
 - No coverage percentage was measured. Passing synthetic tests is not a calibrated
   physical accuracy claim. Safari, Firefox, real-device audio, hearing/output
   hardware and older-mobile performance have not been verified.

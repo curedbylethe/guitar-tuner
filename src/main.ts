@@ -8,7 +8,7 @@ import {
   type SettingsStorage,
 } from "./state/settings";
 import { frequencies, getTuning, supportedReference } from "./tuning/presets";
-import { centsBetween } from "./tuning/notes";
+import { centsBetween, octaveAmbiguous } from "./tuning/notes";
 import { feedback } from "./tuning/feedback";
 import { StringSelector } from "./tuning/selection";
 import { element, showError } from "./ui/dom";
@@ -100,16 +100,19 @@ function analyze(): void {
     tracker.push(mic.sample(), now);
     const pitch = tracker.reading(now);
     if (pitch && automatic(state)) {
-      const selected = selector.choose(
-        pitch.frequency,
-        targets(),
-        state.sel,
-        pitch.stable,
-      );
-      if (selected !== state.sel) {
-        state.sel = selected;
-        latched = false;
-        save();
+      const cents = centsBetween(pitch.frequency, targets()[state.sel]!);
+      if (!octaveAmbiguous(cents)) {
+        const selected = selector.choose(
+          pitch.frequency,
+          targets(),
+          state.sel,
+          pitch.stable,
+        );
+        if (selected !== state.sel) {
+          state.sel = selected;
+          latched = false;
+          save();
+        }
       }
     }
   }
@@ -121,22 +124,25 @@ function frame(now: number): void {
   const cents = pitch
     ? centsBetween(pitch.frequency, targets()[state.sel]!)
     : 0;
+  const ambiguous = !!pitch && octaveAmbiguous(cents);
   const status = feedback(
     live,
     tone.active,
-    pitch ? cents : null,
+    pitch && !ambiguous ? cents : null,
     !!pitch?.stable,
     latched,
   );
-  latched = status === "in";
-  if (status === "in") tuned.add(state.sel);
-  else if (status === "flat" || status === "sharp") tuned.delete(state.sel);
+  if (!ambiguous) {
+    latched = status === "in";
+    if (status === "in") tuned.add(state.sel);
+    else if (status === "flat" || status === "sharp") tuned.delete(state.sel);
+  }
   renderConfiguration(state, tuning(), targets(), tuned);
   renderCustom(state, tuning(), pitch, live, tone.active, simulated);
   meter.render(
     status,
     tuning().notes[state.sel]!,
-    pitch?.frequency ?? null,
+    pitch && !ambiguous ? pitch.frequency : null,
     cents,
     tone.active
       ? "Reference tone"
@@ -220,6 +226,7 @@ element("#rec").addEventListener("click", () => {
     tone.active ||
     mic.status !== "listening" ||
     simulated ||
+    octaveAmbiguous(centsBetween(pitch.frequency, targets()[state.sel]!)) ||
     !supportedReference(tuning(), { i: state.sel, f: pitch.frequency })
   )
     return;
