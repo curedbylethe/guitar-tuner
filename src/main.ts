@@ -15,7 +15,7 @@ try { storage = localStorage; } catch { /* Safari/private policies can disable a
 const state=storage ? readSettings(storage):defaults();
 const tracker=new PitchTracker(), selector=new StringSelector(), tuned=new Set<number>();
 const meter=new Meter();
-let latched=false, lastDetection=0, animation=0;
+let latched=false, animation=0, analysisTimer=0;
 const tuning=()=>getTuning(state.mode==='preset' ? state.preset:state.base);
 const targets=()=>frequencies(tuning(),state.mode==='custom' ? state.ref:null);
 const save=()=>{if(storage) writeSettings(storage,state);};
@@ -38,11 +38,9 @@ function reading(now: number): PitchReading | null {
   const cents=simulations[simulation!];
   return cents===null || cents===undefined ? null : {frequency:targets()[state.sel]! * 2**(cents/1200),stable:simulation!=='settling',count:simulation==='settling'?2:8,spread:simulation==='settling'?99:0};
 }
-function frame(now: number): void {
-  animation=requestAnimationFrame(frame);
-  const live=mic.status==='listening' || simulated;
-  if (mic.status==='listening' && !tone.active && now-lastDetection>=50) {
-    lastDetection=now;
+function analyze(): void {
+  const now=performance.now();
+  if (mic.status==='listening' && !tone.active) {
     tracker.push(mic.sample(),now);
     const pitch=tracker.reading(now);
     if(pitch && automatic(state)) {
@@ -50,6 +48,10 @@ function frame(now: number): void {
       if(selected!==state.sel) {state.sel=selected;latched=false;save();}
     }
   }
+}
+function frame(now: number): void {
+  animation=requestAnimationFrame(frame);
+  const live=mic.status==='listening' || simulated;
   const pitch=live && !tone.active ? reading(now):null;
   const cents=pitch ? centsBetween(pitch.frequency,targets()[state.sel]!):0;
   const status=feedback(live,tone.active,pitch ? cents:null,!!pitch?.stable,latched);
@@ -85,10 +87,15 @@ element('#rec').addEventListener('click',()=>{
   state.ref={i:state.sel,f:pitch.frequency};refresh();
 });
 element('#clr').addEventListener('click',()=>{state.ref=null;refresh();});
-function pause(): void {mic.stop();tone.stop();reset();cancelAnimationFrame(animation);}
+function pause(): void {mic.stop();tone.stop();reset();cancelAnimationFrame(animation);clearInterval(analysisTimer);}
+function resume(): void {
+  cancelAnimationFrame(animation);clearInterval(analysisTimer);
+  analysisTimer=window.setInterval(analyze,50);
+  animation=requestAnimationFrame(frame);
+}
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden) pause();else {lastDetection=0;animation=requestAnimationFrame(frame);}
+  if(document.hidden) pause();else resume();
 });
 window.addEventListener('pagehide',pause);
-window.addEventListener('pageshow',()=>{cancelAnimationFrame(animation);animation=requestAnimationFrame(frame);});
-animation=requestAnimationFrame(frame);
+window.addEventListener('pageshow',resume);
+resume();
