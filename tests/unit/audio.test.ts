@@ -83,6 +83,19 @@ describe("YIN synthetic accuracy", () => {
     expect(result).not.toBeNull();
     expect(Math.abs(centsBetween(result!, reported))).toBeLessThan(3);
   });
+  it.each([
+    [82.407, 247.221],
+    [196, 588],
+    [987.767, 2963.301],
+  ])("does not third a pure third harmonic at %f Hz", (f, expected) => {
+    const d = new YinDetector(48000),
+      result = d.detect(signal(d, f, 0, 0, 0.3, 3));
+    // 2963.301 Hz is above the ceiling; the detector keeps its pre-existing
+    // subharmonic reading at 987.767 Hz rather than returning null.
+    const reported = expected > d.maxFrequency ? f : expected;
+    expect(result).not.toBeNull();
+    expect(Math.abs(centsBetween(result!, reported))).toBeLessThan(3);
+  });
   it.each([44100, 48000, 96000, 192000])(
     "resolves a fundamental 10 dB and 6 dB below its third harmonic at %i Hz",
     (sr) => {
@@ -97,6 +110,25 @@ describe("YIN synthetic accuracy", () => {
         }
     },
   );
+  it.each([44100, 48000, 96000, 192000])(
+    "resolves a fundamental 20 dB below its third harmonic at %i Hz",
+    (sr) => {
+      const d = new YinDetector(sr);
+      for (const f of [
+        55.1, 65.406, 73.416, 82.407, 110, 146.832, 196, 246.942,
+      ]) {
+        const result = d.detect(signal(d, f, 0.1, 0, 1, 3));
+        expect(result).not.toBeNull();
+        expect(Math.abs(centsBetween(result!, f))).toBeLessThan(3);
+      }
+    },
+  );
+  it("resolves a fundamental 20 dB below its third harmonic with deterministic noise", () => {
+    const d = new YinDetector(48000),
+      result = d.detect(signal(d, 82.407, 0.1, 0.002, 1, 3));
+    expect(result).not.toBeNull();
+    expect(Math.abs(centsBetween(result!, 82.407))).toBeLessThan(3);
+  });
   it.each([82.407, 110, 146.832, 196, 246.942, 329.628])(
     "detects %f Hz at 48 kHz near -42 dBFS RMS",
     (f) => {

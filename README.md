@@ -70,7 +70,7 @@ no selection or reference change. Strings exactly an octave apart need manual
 selection. Older devices at high sample rates may need performance work. Physical
 accuracy is uncalibrated.
 
-102 unit tests and the production build passed. The live browser passed 11 workflow
+114 unit tests and the production build passed. The live browser passed 11 workflow
 checks plus responsive checks at four widths. The 42-case Playwright suite passed in
 this workspace; an earlier Chromium socket denial no longer applies, but run it in CI
 before release. Safari/Firefox and real-instrument accuracy are not yet verified.

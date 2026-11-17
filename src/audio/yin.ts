@@ -3,13 +3,14 @@
  * variance floor rejects only silence, DC and denormals.
  * Lag bounds scale with sample rate; a 1024-lag cap cannot see C2 at 96 kHz.
  * Two work buffers are reused: `difference` (cumulative mean, for threshold and
- * interpolation) and `raw` (unnormalized, for the octave extension). An extension
- * step doubles a basin lag when the raw difference drops clearly at that period.
+ * interpolation) and `raw` (unnormalized, for the extension search). The extension
+ * scans small integer multiples of the accepted basin, taking the first whose raw
+ * difference falls by at least half; each candidate lag is O(1) work and no array
+ * is allocated per lag.
  * The analysis window is ~43 ms plus one maximum period.
  */
 const MIN_VARIANCE = 1e-8;
 const RESIDUAL = 0.002;
-const MARGIN = 0.001;
 export class YinDetector {
   readonly minFrequency = 55;
   readonly maxFrequency = 1000;
@@ -73,16 +74,17 @@ export class YinDetector {
       let best = lag;
       for (let candidate = lag + 1; candidate <= end; candidate++)
         if (d[candidate]! < d[best]!) best = candidate;
-      let chosen = best;
+      const base = best;
+      let chosen = base;
       // The cumulative-mean `d` cannot be compared across lags, but the raw
-      // difference can: when a weak fundamental hides behind its second harmonic,
-      // the doubled lag fits far better. Doubling only, iterated; lowest notes
-      // sit at the lag ceiling and skip this step.
-      while (chosen * 2 <= this.maxLag - 1) {
-        // Above three quarters of the range, doubling would leave the guitar band
+      // difference can: a weak fundamental can hide behind a partial whose period
+      // is a small multiple of the basin. Search those multiples and take the first
+      // that clearly fits better; lowest notes sit at the lag ceiling and skip it.
+      for (let k = 2; k <= Math.floor((this.maxLag - 1) / base); k++) {
+        // Above three quarters of the range, extension would leave the guitar band
         // and turn an out-of-range harmonic into a spurious low subharmonic.
         if (this.sampleRate / chosen > (this.maxFrequency * 3) / 4) break;
-        const centre = chosen * 2;
+        const centre = base * k;
         const from = Math.floor(centre * 0.92);
         const to = Math.min(this.maxLag - 1, Math.ceil(centre * 1.08));
         if (from > to) break;
@@ -90,8 +92,10 @@ export class YinDetector {
         for (let p = from; p <= to; p++)
           if (nd(p) < nd(candidate)) candidate = p;
         if (nd(chosen) < RESIDUAL) break;
-        if (!(nd(candidate) <= nd(chosen) - MARGIN)) break;
-        chosen = candidate;
+        if (nd(candidate) <= nd(chosen) * 0.5) {
+          chosen = candidate;
+          break;
+        }
       }
       const a = d[chosen - 1]!,
         b = d[chosen]!,
