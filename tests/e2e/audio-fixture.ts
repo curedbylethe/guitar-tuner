@@ -2,6 +2,8 @@ import type { Page } from "@playwright/test";
 export interface MockAudio {
   frequency: number;
   amplitude: number;
+  /** Amplitude of the second harmonic, added to the fundamental. */
+  secondPartial: number;
   denied: boolean;
   pending: boolean;
   requests: number;
@@ -19,6 +21,7 @@ export function installMockAudio(): void {
   window.testAudio = {
     frequency: 82.4069,
     amplitude: 0.3,
+    secondPartial: 0,
     denied: false,
     pending: false,
     requests: 0,
@@ -44,10 +47,12 @@ export function installMockAudio(): void {
       if (when) setTimeout(() => this.onended?.(), 2400);
     }
     getFloatTimeDomainData(buffer: Float32Array): void {
-      for (let i = 0; i < buffer.length; i++)
+      for (let i = 0; i < buffer.length; i++) {
+        const phase = (2 * Math.PI * state.frequency * i) / 48000;
         buffer[i] =
-          state.amplitude *
-          Math.sin((2 * Math.PI * state.frequency * i) / 48000);
+          state.amplitude * Math.sin(phase) +
+          state.secondPartial * Math.sin(2 * phase);
+      }
     }
   }
   class Context {
