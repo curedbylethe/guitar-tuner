@@ -71,7 +71,7 @@ selection. Older devices at high sample rates may need performance work. Physica
 accuracy is uncalibrated.
 
 114 unit tests and the production build passed. The live browser passed 11 workflow
-checks plus responsive checks at four widths. The 42-case Playwright suite passed in
+checks plus responsive checks at four widths. The 45-case Playwright suite passed in
 this workspace; an earlier Chromium socket denial no longer applies, but run it in CI
 before release. Safari/Firefox and real-instrument accuracy are not yet verified.
 See [Testing](docs/testing.md).
