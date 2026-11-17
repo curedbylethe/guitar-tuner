@@ -31,6 +31,11 @@ CI uses the version installed by Playwright. Reports and traces are ignored by G
   production YIN. The meter stays on Listening/No reading with no heard frequency and
   selection stays on E2 instead of moving to D3. Disabling the guard makes that case
   fail with selection on D3.
+- One Playwright case per viewport feeds a fundamental 20 dB below its second harmonic
+  (amplitude 0.03 against a 0.3 second partial at 82.4069 Hz) through production YIN.
+  The displayed state settles on E2 in tune at 82.41 Hz. If the detector returned the
+  second harmonic, the octave guard would show Listening with no heard frequency, so
+  the same assertions reject that regression.
 - Synthetic sine cases: 11 frequencies from 55.1 to 987.767 Hz at four sample rates
   (44.1, 48, 96, 192 kHz), each <3 cents error in those exact generated cases.
 - Third-harmonic cases on the same unit fixture, `signal(d, f, 0.1, 0, 1, 3)`
@@ -50,7 +55,7 @@ CI uses the version installed by Playwright. Reports and traces are ignored by G
 - The real preview browser passed 11/11 development-harness workflow checks.
 - Native keyboard radio-arrow mode navigation was also checked in the live browser.
 - Real application constrained-viewport checks passed at 320, 360, 768 and 1280 px.
-- Playwright discovers 42 cases (14 per viewport across three projects). All 42 passed
+- Playwright discovers 45 cases (15 per viewport across three projects). All 45 passed
   in this workspace with a locally launched Chromium; none were skipped. An earlier
   sandbox denial of Chromium's singleton socket (`Operation not permitted`) no longer
   applies here, but release verification still needs a CI run.
