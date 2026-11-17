@@ -109,6 +109,22 @@ test("suppresses an octave-ambiguous reading without changing selection", async 
   await expect(page.locator("#rec")).toBeDisabled();
   await expect(page.locator("#step-now")).not.toContainText("164.81");
 });
+test("keeps the selected string when its second harmonic dominates", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.testAudio.secondPartial = 0.3;
+    window.testAudio.amplitude = 0.03;
+  });
+  await page.locator("#mic").click();
+  await expect(page.locator("#note")).toHaveText("E2");
+  await expect(page.locator("#state")).toHaveText("In tune");
+  await expect(page.locator("#heard")).toHaveText("82.41 Hz");
+  await expect(page.locator("#heard")).not.toHaveText("164.81 Hz");
+  await expect(
+    page.getByRole("meter", { name: "Pitch offset in cents" }),
+  ).not.toHaveAttribute("aria-valuetext", "No reading");
+});
 test("records a custom reference at the meter and invalidates it on base changes", async ({
   page,
 }) => {
