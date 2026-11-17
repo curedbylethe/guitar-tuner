@@ -54,21 +54,22 @@ too-short input is also rejected.
 
 The first threshold basin is searched for its lowest normalized difference within
 25% of the threshold lag. This corrects a noisy-signal early-local-minimum bias found
-by a deterministic regression test. An extension step then doubles the basin lag while
-the doubled position fits clearly better: it scans ±8 % around that centre, breaks when
-the raw normalized difference at the current lag is below `RESIDUAL` (0.002), and
-accepts a candidate only when it improves that value by at least `MARGIN` (0.001).
-Doubling is iterated; lags at the ceiling skip it. The comparison uses `nd`, the raw
-squared difference divided by `2 × window × variance`, not the cumulative-mean
-difference used for the threshold. `nd` has no cumulative-mean lag trend, so it is
-comparable across lags. Extension also stops above three quarters of the maximum
-frequency, where doubling would leave the guitar band and create a spurious low
-subharmonic. Three-point parabolic interpolation refines the chosen lag. Runtime is
+by a deterministic regression test. An extension step then scans small integer multiples
+`base * k` (k = 2, 3, ...) of the accepted basin lag, up to the lag ceiling: for each
+multiple it scans ±8 % around that centre and accepts the first candidate whose `nd`
+is at most half the value at the current lag, stopping there. Multiples that miss that
+halving rule are skipped. It breaks when the current `nd` is already below `RESIDUAL`
+(0.002). The comparison uses `nd`, the raw squared difference divided by
+`2 × window × variance`, not the cumulative-mean difference used for the threshold.
+`nd` has no cumulative-mean lag trend, so it is comparable across lags. Extension also
+stops above three quarters of the maximum frequency (750 Hz), where a multiple would
+leave the guitar band and create a spurious low subharmonic; that band guard is
+unchanged. Three-point parabolic interpolation refines the chosen lag. Runtime is
 O(window × maximum lag); two per-lag work buffers (`difference` and `raw`) are reused,
-but no ephemeral array is allocated per lag. The upper supported sample rate is
-192 kHz. Main-thread analysis may be expensive on older mobile devices at high sample
-rates; profiling is needed before introducing a worker or AudioWorklet. This is a
-monophonic detector, not chord recognition.
+no ephemeral array is allocated per lag and each candidate lag costs O(1) extra work.
+The upper supported sample rate is 192 kHz. Main-thread analysis may be expensive on
+older mobile devices at high sample rates; profiling is needed before introducing a
+worker or AudioWorklet. This is a monophonic detector, not chord recognition.
 
 History keeps eight samples; presentation uses the median of five. Stability needs
 six observations with <10-cent spread. A >70-cent jump or >200 ms gap resets history;
@@ -80,11 +81,13 @@ An offset within 50 cents of a single octave either way (±1200 cents) is unusab
 no verdict, no heard frequency, no automatic-selection move and no reference
 recording. Some presets put two strings an exact octave apart (D2/D3 in Drop D,
 E2/E3 in Open E, C2/C3 in Open C); such a string must be chosen manually, while
-standard tuning has no octave pair. The extension resolves a fundamental that sits
-20–26 dB below a dominant second harmonic (all six open strings, with and without
-noise). It does not resolve a dominant third or higher harmonic, or a fundamental
-about 30 dB down; those
-readings can still be reported an octave high when the guard does not catch them.
+standard tuning has no octave pair. The extension resolves a fundamental 20–26 dB below
+a dominant second harmonic (all six open strings, with and without noise), and one 20 dB
+below a dominant third harmonic from C2 through B3 (55.1–246.942 Hz) at all four sample
+rates. It does not resolve the 20 dB third-harmonic case at E4 (329.628 Hz), which stays
+about 1900 cents high, or a dominant fifth harmonic, which stays about 2800 cents high.
+A pure third harmonic with no fundamental still reads at three times its nominal pitch,
+as the pure second harmonic does at twice its own.
 
 ## Custom calibration and persistence
 

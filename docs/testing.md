@@ -24,7 +24,7 @@ CI uses the version installed by Playwright. Reports and traces are ignored by G
 
 ## Verified during implementation (2026-11-16, updated 2026-11-17)
 
-- 102 Vitest tests passed; strict typecheck and Pages-subpath production build passed.
+- 114 Vitest tests passed; strict typecheck and Pages-subpath production build passed.
   Ten `octaveAmbiguous` cases cover 1200, −1200, 1180 and −1220 cents as ambiguous,
   and 0, 700, 1150, 1250, 2400 and −2400 cents as unambiguous.
 - One Playwright case per viewport feeds 164.81 Hz (one octave above E2) through
@@ -33,17 +33,18 @@ CI uses the version installed by Playwright. Reports and traces are ignored by G
   fail with selection on D3.
 - Synthetic sine cases: 11 frequencies from 55.1 to 987.767 Hz at four sample rates
   (44.1, 48, 96, 192 kHz), each <3 cents error in those exact generated cases.
-- Third-harmonic baseline measured at commit `b36d83f` on the same unit fixture,
-  `signal(d, f, 0.1, 0, 1, 3)` (fundamental 20 dB below a third harmonic of
-  amplitude 1.0), at 44.1, 48, 96 and 192 kHz for 65.406, 73.416, 82.407, 110,
-  146.832, 196, 246.942 and 329.628 Hz, plus 55.1 Hz. All 36 readings were wrong:
-  1903.3–1905.4 cents high at every rate except 246.942 Hz at 44.1 kHz, which
-  reported 370.355 Hz (701.7 cents). A pure third harmonic with no fundamental
-  read three times nominal at every rate (329.628 Hz read 988.9–989.0 Hz);
-  recorded as an observation, not asserted. Single-threaded `detect` cost, three
-  repeats of 600 calls at 44.1/48 kHz, 250 at 96 kHz and 120 at 192 kHz: 2.01–2.08,
-  2.35–2.56, 9.72–10.00 and 35.46–38.80 ms per call, spread within a rate at most
-  9%. The detector is unchanged here; these readings are the defect description.
+- Third-harmonic cases on the same unit fixture, `signal(d, f, 0.1, 0, 1, 3)`
+  (fundamental 20 dB below a third harmonic of amplitude 1.0): 55.1, 65.406,
+  73.416, 82.407, 110, 146.832, 196 and 246.942 Hz now read within 3 cents of the
+  fundamental (measured error at most 0.02 cents) at 44.1, 48, 96 and 192 kHz; a
+  noisy 82.407 Hz case at 48 kHz does too. E4 (329.628 Hz) stays unresolved, about
+  1903 cents high: the three-quarter band guard leaves it out of scope. A pure third
+  harmonic with no fundamental reads three times nominal, now asserted as a lock
+  alongside the pure-second-harmonic case, including its above-band reading.
+  Single-threaded `detect` cost, three repeats of 600 calls at 44.1/48 kHz, 250 at
+  96 kHz and 120 at 192 kHz: 1.82–2.55, 2.13–3.19, 8.82–10.73 and 32.37–33.91 ms
+  per call, within run-to-run variance of the pre-change 2.01–2.08, 2.35–2.56,
+  9.72–10.00 and 35.46–38.80 ms. The extra multiple search is inside that noise.
 - Deterministic weak/noisy and stronger-second-harmonic fixtures pass; silence, DC,
   random noise, invalid sample rates and malformed buffers are rejected.
 - The real preview browser passed 11/11 development-harness workflow checks.
